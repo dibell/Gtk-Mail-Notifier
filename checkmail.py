@@ -9,7 +9,8 @@ import ConfigParser
 from datetime import datetime
 
 class MailAccount:
-    def __init__(self, url, username, password):
+    def __init__(self, name, url, username, password):
+        self.name = name
         self.M = imaplib.IMAP4_SSL(url)
         self.username = username
         self.password = password
@@ -63,7 +64,7 @@ class CheckMailTray:
             url = config.get(section, 'url')
             username = config.get(section, 'username')
             password = config.get(section, 'password')
-            self.accounts.append(MailAccount(url, username, password))
+            self.accounts.append(MailAccount(section, url, username, password))
 
         self.my_timer()
 
@@ -75,6 +76,8 @@ class CheckMailTray:
         for account in self.accounts:
             headers = account.getHeaders()
             messageCount += len(headers)
+            if messageCount:
+                status += account.name + '\n' + '-----------\n'
             for key in headers:
                 status += ('\n'.join(headers[key])) + '\n\n'
             

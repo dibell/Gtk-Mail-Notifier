@@ -1,7 +1,6 @@
 - fix memory leak
 - error handling
 - store password securely
-- multiple accounts
 - archive
 - mark as read
 - delete
