@@ -1,8 +1,11 @@
 - fix memory leak
 - error handling
 - store password securely
+- logging
+
 - archive
 - mark as read
 - delete
+
 - package for ubuntu
 - pop and imap options?

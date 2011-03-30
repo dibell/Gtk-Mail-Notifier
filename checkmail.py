@@ -38,6 +38,11 @@ class MailAccount:
                     if header.startswith('Subject:') or header.startswith('From:'):
                         allheaders[num].append(header)
         return allheaders
+    
+    def close(self):
+        self.M.close()
+        self.M.logout()
+
 
 class CheckMailTray:
     def __init__(self):
@@ -71,17 +76,20 @@ class CheckMailTray:
         gtk.main()
 
     def my_timer(self, *args):
-        messageCount = 0
+        totalCount = 0
         status = ''
         for account in self.accounts:
+            print account.name
             headers = account.getHeaders()
-            messageCount += len(headers)
+            messageCount = len(headers)
+            print messageCount
             if messageCount:
                 status += account.name + '\n' + '-----------\n'
             for key in headers:
                 status += ('\n'.join(headers[key])) + '\n\n'
+            totalCount += messageCount
             
-        if messageCount > 0:
+        if totalCount > 0:
             self.statusIcon.set_from_file('gmail-pencil24.png')
         else:
             self.statusIcon.set_from_file('gmail-pencil24-grey.png')
@@ -101,8 +109,8 @@ class CheckMailTray:
         #window.show()
 
     def quit_cb(self, widget, data = None):
-        self.M.close()
-        self.M.logout()
+        for account in self.accounts:
+            account.close()
         gtk.main_quit()
 
     def popup_menu_cb(self, widget, button, time, data = None):
