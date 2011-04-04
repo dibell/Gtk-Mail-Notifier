@@ -11,12 +11,12 @@ from datetime import datetime
 class MailAccount:
     def __init__(self, name, url, username, password):
         self.name = name
-        self.M = imaplib.IMAP4_SSL(url)
+        self.url = url
         self.username = username
         self.password = password
-        self.login()
 
     def login(self):
+        self.M = imaplib.IMAP4_SSL(self.url)
         self.M.login(self.username, self.password)
 
     def checkMail(self):
@@ -42,6 +42,7 @@ class MailAccount:
     def close(self):
         self.M.close()
         self.M.logout()
+        del self.M
 
 
 class CheckMailTray:
@@ -51,12 +52,19 @@ class CheckMailTray:
         self.statusIcon.set_visible(True)
 
         self.menu = gtk.Menu()
+
         self.menuItem = gtk.MenuItem('Check mail')
         self.menuItem.connect('activate', self.my_timer)
         self.menu.append(self.menuItem)
+
+        #self.menuItem = gtk.MenuItem('Debug')
+        #self.menuItem.connect('activate', self.debug)
+        #self.menu.append(self.menuItem)
+
         self.menuItem = gtk.ImageMenuItem(gtk.STOCK_QUIT)
         self.menuItem.connect('activate', self.quit_cb, self.statusIcon)
         self.menu.append(self.menuItem)
+
         self.statusIcon.connect('popup-menu', self.popup_menu_cb, self.menu)
         self.statusIcon.set_visible(1)
 
@@ -79,15 +87,15 @@ class CheckMailTray:
         totalCount = 0
         status = ''
         for account in self.accounts:
-            print account.name
+            account.login()
             headers = account.getHeaders()
             messageCount = len(headers)
-            print messageCount
             if messageCount:
                 status += account.name + '\n' + '-----------\n'
             for key in headers:
                 status += ('\n'.join(headers[key])) + '\n\n'
             totalCount += messageCount
+            account.close()
             
         if totalCount > 0:
             self.statusIcon.set_from_file('gmail-pencil24.png')
@@ -109,8 +117,6 @@ class CheckMailTray:
         #window.show()
 
     def quit_cb(self, widget, data = None):
-        for account in self.accounts:
-            account.close()
         gtk.main_quit()
 
     def popup_menu_cb(self, widget, button, time, data = None):
