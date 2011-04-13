@@ -87,16 +87,19 @@ class CheckMailTray:
         totalCount = 0
         status = ''
         for account in self.accounts:
-            account.login()
-            headers = account.getHeaders()
-            messageCount = len(headers)
-            if messageCount:
-                status += account.name + '\n' + '-----------\n'
-            for key in headers:
-                status += ('\n'.join(headers[key])) + '\n\n'
-            totalCount += messageCount
-            account.close()
-            
+            try:
+                account.login()
+                headers = account.getHeaders()
+                messageCount = len(headers)
+                if messageCount:
+                    status += account.name + '\n' + '-----------\n'
+                for key in headers:
+                    status += ('\n'.join(headers[key])) + '\n\n'
+                totalCount += messageCount
+                account.close()
+            except Exception, e:
+                print e
+                
         if totalCount > 0:
             self.statusIcon.set_from_file('gmail-pencil24.png')
         else:

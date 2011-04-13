@@ -1,11 +1,13 @@
-- fix memory leak
 - error handling
-- store password securely
+  - broken icon
 - logging
+- in progress icon (animated?
+- store password securely
 
-- archive
-- mark as read
-- delete
+- Add Mail actions
+  - archive
+  - mark as read
+  - delete
 
 - package for ubuntu
-- pop and imap options?
+- pop accounts too?
