@@ -3,6 +3,7 @@
 import pygtk
 pygtk.require('2.0')
 import gtk
+import sys
 import gobject
 import imaplib
 import ConfigParser
@@ -73,11 +74,15 @@ class CheckMailTray:
         self.accounts = []
         config = ConfigParser.RawConfigParser()
         config.read('pw.ini')
-        for section in config.sections():
-            url = config.get(section, 'url')
-            username = config.get(section, 'username')
-            password = config.get(section, 'password')
-            self.accounts.append(MailAccount(section, url, username, password))
+        if config.sections():
+            for section in config.sections():
+                url = config.get(section, 'url')
+                username = config.get(section, 'username')
+                password = config.get(section, 'password')
+                self.accounts.append(MailAccount(section, url, username, password))
+        else:
+            print "No config"
+            sys.exit()
 
         self.my_timer()
 
