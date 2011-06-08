@@ -7,6 +7,7 @@ import gobject
 import imaplib
 import ConfigParser
 from datetime import datetime
+from email.header import decode_header
 
 class MailAccount:
     def __init__(self, name, url, username, password):
@@ -36,7 +37,15 @@ class MailAccount:
                 headers = data[0][1].split('\r\n')
                 for header in headers:
                     if header.startswith('Subject:') or header.startswith('From:'):
-                        allheaders[num].append(header)
+                        decodedHeader = ""
+                        decodedParts = decode_header(header)
+                        for part in decodedParts:
+                            if part[1]:
+                                decodedHeader += unicode(*part)
+                            else:
+                                decodedHeader += part[0]
+
+                        allheaders[num].append(decodedHeader)
         return allheaders
     
     def close(self):
