@@ -1,7 +1,8 @@
 - error handling
   - broken icon
 - logging
-- in progress icon (animated?
+- decode utf-8 subject lines
+- in progress icon (animated)?
 - store password securely
 
 - Add Mail actions
