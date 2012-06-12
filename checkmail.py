@@ -6,6 +6,7 @@ import gtk
 import gobject
 import imaplib
 import ConfigParser
+from threading import Thread
 from datetime import datetime
 from email.header import decode_header
 
@@ -53,8 +54,38 @@ class MailAccount:
         self.M.logout()
         del self.M
 
+class MyThread(Thread):
+    def __init__(self, tray):
+        super(MyThread, self).__init__()
+        self.tray = tray
 
-class CheckMailTray:
+    def run(self):
+        status = ''
+        totalCount = 0
+        for account in self.tray.accounts:
+            try:
+                account.login()
+                headers = account.getHeaders()
+                messageCount = len(headers)
+                if messageCount:
+                    status += account.name + '\n' + '-----------\n'
+                for key in headers:
+                    status += ('\n'.join(headers[key])) + '\n\n'
+                totalCount += messageCount
+                account.close()
+            except Exception, e:
+                print e
+                
+        if totalCount > 0:
+            gobject.idle_add(self.tray.statusIcon.set_from_file, 'gmail-pencil24.png')
+        else:
+            gobject.idle_add(self.tray.statusIcon.set_from_file, 'gmail-pencil24-grey.png')
+
+        status += "Last checked: %s" % (datetime.now().strftime('%H:%M:%S'))
+        gobject.idle_add(self.tray.statusIcon.set_tooltip, status)
+
+
+class CheckMailTray(object):
     def __init__(self):
         self.statusIcon = gtk.StatusIcon()
         self.statusIcon.set_from_file('gmail-pencil24-grey.png')
@@ -77,47 +108,34 @@ class CheckMailTray:
         self.statusIcon.connect('popup-menu', self.popup_menu_cb, self.menu)
         self.statusIcon.set_visible(1)
 
-        gobject.timeout_add_seconds(7*60, self.my_timer)
+        gobject.timeout_add_seconds(15*60, self.my_timer)
 
         self.accounts = []
         config = ConfigParser.RawConfigParser()
         config.read('pw.ini')
+        accounts = 0
         for section in config.sections():
             url = config.get(section, 'url')
             username = config.get(section, 'username')
             password = config.get(section, 'password')
             self.accounts.append(MailAccount(section, url, username, password))
+            accounts += 1
+
+        if not accounts:
+           raise Exception("No account config found")
 
         self.my_timer()
 
         gtk.main()
 
+
     def my_timer(self, *args):
-        totalCount = 0
-        status = ''
-        for account in self.accounts:
-            try:
-                account.login()
-                headers = account.getHeaders()
-                messageCount = len(headers)
-                if messageCount:
-                    status += account.name + '\n' + '-----------\n'
-                for key in headers:
-                    status += ('\n'.join(headers[key])) + '\n\n'
-                totalCount += messageCount
-                account.close()
-            except Exception, e:
-                print e
-                
-        if totalCount > 0:
-            self.statusIcon.set_from_file('gmail-pencil24.png')
-        else:
-            self.statusIcon.set_from_file('gmail-pencil24-grey.png')
-
-        status += "Last checked: %s" % (datetime.now().strftime('%H:%M:%S'))
-        self.statusIcon.set_tooltip(status)
-
+        self.statusIcon.set_from_file('gmail-pencil24-pending.png')
+        #gtk.gdk.flush()
+        thread = MyThread(self)
+        thread.start()
         return True # to requeue the timer
+
 
     #def execute_cb(self, widget, event, data = None):
         #window = gtk.Window(gtk.WINDOW_TOPLEVEL)
@@ -139,4 +157,5 @@ class CheckMailTray:
                            3, time, self.statusIcon)
 
 if __name__ == "__main__":
+    gtk.gdk.threads_init()
     tray = CheckMailTray()
