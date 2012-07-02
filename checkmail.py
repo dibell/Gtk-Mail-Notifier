@@ -4,6 +4,7 @@ import pygtk
 pygtk.require('2.0')
 import gtk
 import sys
+import os
 import gobject
 import imaplib
 import ConfigParser
@@ -78,9 +79,9 @@ class MyThread(Thread):
                 print e
                 
         if totalCount > 0:
-            gobject.idle_add(self.tray.statusIcon.set_from_file, 'gmail-pencil24.png')
+            gobject.idle_add(self.tray.statusIcon.set_from_file, os.path.join(os.path.dirname(__file__), 'gmail-pencil24.png'))
         else:
-            gobject.idle_add(self.tray.statusIcon.set_from_file, 'gmail-pencil24-grey.png')
+            gobject.idle_add(self.tray.statusIcon.set_from_file, os.path.join(os.path.dirname(__file__), 'gmail-pencil24-grey.png'))
 
         status += "Last checked: %s" % (datetime.now().strftime('%H:%M:%S'))
         gobject.idle_add(self.tray.statusIcon.set_tooltip, status)
@@ -89,7 +90,7 @@ class MyThread(Thread):
 class CheckMailTray(object):
     def __init__(self):
         self.statusIcon = gtk.StatusIcon()
-        self.statusIcon.set_from_file('gmail-pencil24-grey.png')
+        self.statusIcon.set_from_file(os.path.join(os.path.dirname(__file__), 'gmail-pencil24-grey.png'))
         self.statusIcon.set_visible(True)
 
         self.menu = gtk.Menu()
@@ -113,7 +114,7 @@ class CheckMailTray(object):
 
         self.accounts = []
         config = ConfigParser.RawConfigParser()
-        config.read('pw.ini')
+        config.read(os.path.expanduser('~/.pw.ini'))
         if config.sections():
             for section in config.sections():
                 url = config.get(section, 'url')
@@ -130,7 +131,7 @@ class CheckMailTray(object):
 
 
     def my_timer(self, *args):
-        self.statusIcon.set_from_file('gmail-pencil24-pending.png')
+        self.statusIcon.set_from_file(os.path.join(os.path.dirname(__file__), 'gmail-pencil24-pending.png'))
         #gtk.gdk.flush()
         thread = MyThread(self)
         thread.start()
